@@ -19,6 +19,18 @@
 @class NSConcreteTask, SimulatorInfo;
 
 /**
+ *  Returns array of NSString's with contents read from fildes.
+ *
+ *  Size of the returned array is equal to `sz`.
+ *  If `block` is provided then function dynamically and asynchronously
+ *  feeds lines to a block on the provided queue. Ensure that
+ *  provided queue is serial otherwise order of lines could be wrong.
+ *  If not queue is provided then block is synchronously invoked on
+ *  the current queue.
+ */
+NSArray *ReadOutputsAndFeedOuputLinesToBlockOnQueue(int *fildes, int sz, void (^block)(NSString *), dispatch_queue_t blockDispatchQueue);
+
+/**
  * Launchs a task, waits for exit, and returns a dictionary like
  * { @"stdout": "...", @"stderr": "..." }
  */
