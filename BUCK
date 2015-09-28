@@ -22,13 +22,21 @@ COMMON_REPORTERS_SRCS = [
     'Common/EventGenerator.m',
     'Common/NSFileHandle+Print.m',
     'Common/Reporter.m',
+    'Common/TaskUtil.m',
+    'Common/XcodeBuildSettings.m',
+    'Common/XCToolUtil.m',
 ]
 
 COMMON_REPORTERS_HEADERS = [
     'Common/EventGenerator.h',
+    'Common/EventSink.h',
+    'Common/NSConcreteTask.h',
     'Common/NSFileHandle+Print.h',
     'Common/Reporter.h',
     'Common/ReporterEvents.h',
+    'Common/TaskUtil.h',
+    'Common/XcodeBuildSettings.h',
+    'Common/XCToolUtil.h',
 ]
 
 TEXT_REPORTERS_SRCS = COMMON_REPORTERS_SRCS + glob(['reporters/text/**/*.m']) + [
