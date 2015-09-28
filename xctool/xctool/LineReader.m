@@ -16,6 +16,8 @@
 
 #import "LineReader.h"
 
+#import "TaskUtil.h"
+
 @interface LineReader ()
 @property (nonatomic, strong) NSFileHandle *fileHandle;
 @property (nonatomic, copy) NSMutableString *buffer;
@@ -32,44 +34,10 @@
   return self;
 }
 
-
-- (void)processBuffer
-{
-  NSUInteger offset = 0;
-
-  for (;;) {
-    NSRange newlineRange = [_buffer rangeOfString:@"\n"
-                                          options:0
-                                            range:NSMakeRange(offset, [_buffer length] - offset)];
-
-    if (newlineRange.length == 0) {
-      break;
-    } else {
-      NSString *line = [_buffer substringWithRange:NSMakeRange(offset, newlineRange.location - offset)];
-      _didReadLineBlock(line);
-      offset = newlineRange.location + 1;
-    }
-  }
-
-  [_buffer replaceCharactersInRange:NSMakeRange(0, offset) withString:@""];
-}
-
-- (void)appendDataToBuffer:(NSData *)data
-{
-  NSString *dataToAppend = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-  if (dataToAppend) {
-    [_buffer appendString:dataToAppend];
-  }
-}
-
 - (void)dataAvailableNotification:(NSNotification *)notification
 {
-  NSData *data = [_fileHandle availableData];
-
-  if (data.length > 0) {
-    [self appendDataToBuffer:data];
-    [self processBuffer];
-  }
+  int fides[1] = {_fileHandle.fileDescriptor};
+  ReadOutputsAndFeedOuputLinesToBlockOnQueueWithTimeout(fides, 1, _didReadLineBlock, NULL, 100);
 
   [_fileHandle waitForDataInBackgroundAndNotify];
 }
@@ -92,8 +60,8 @@
 
 - (void)finishReadingToEndOfFile
 {
-  [self appendDataToBuffer:[_fileHandle readDataToEndOfFile]];
-  [self processBuffer];
+  int fides[1] = {_fileHandle.fileDescriptor};
+  ReadOutputsAndFeedOuputLinesToBlockOnQueueWithTimeout(fides, 1, _didReadLineBlock, NULL, 0);
 }
 
 @end
