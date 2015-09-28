@@ -28,7 +28,8 @@
  *  If not queue is provided then block is synchronously invoked on
  *  the current queue.
  */
-NSArray *ReadOutputsAndFeedOuputLinesToBlockOnQueue(int *fildes, int sz, void (^block)(NSString *), dispatch_queue_t blockDispatchQueue);
+NSArray *ReadOutputsAndFeedOuputLinesToBlockOnQueue(int * const fildes, const int sz, void (^block)(NSString *), dispatch_queue_t blockDispatchQueue);
+NSArray *ReadOutputsAndFeedOuputLinesToBlockOnQueueWithTimeout(int * const fildes, const int sz, void (^block)(NSString *), dispatch_queue_t blockDispatchQueue, int timeout);
 
 /**
  * Launchs a task, waits for exit, and returns a dictionary like

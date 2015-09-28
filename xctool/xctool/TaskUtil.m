@@ -39,7 +39,12 @@ static NSArray *readOutputs(int *fildes, int sz)
   return ReadOutputsAndFeedOuputLinesToBlockOnQueue(fildes, sz, nil, NULL);
 }
 
-NSArray *ReadOutputsAndFeedOuputLinesToBlockOnQueue(int *fildes, int sz, void (^block)(NSString *), dispatch_queue_t queue)
+NSArray *ReadOutputsAndFeedOuputLinesToBlockOnQueue(int * const fildes, const int sz, void (^block)(NSString *), dispatch_queue_t queue)
+{
+  return ReadOutputsAndFeedOuputLinesToBlockOnQueueWithTimeout(fildes, sz, block, queue, -1);
+}
+
+NSArray *ReadOutputsAndFeedOuputLinesToBlockOnQueueWithTimeout(int * const fildes, const int sz, void (^block)(NSString *), dispatch_queue_t queue, int timeout)
 {
   NSMutableArray *outputs = [NSMutableArray arrayWithCapacity:sz];
   struct pollfd fds[sz];
@@ -87,7 +92,7 @@ NSArray *ReadOutputsAndFeedOuputLinesToBlockOnQueue(int *fildes, int sz, void (^
   int remaining = sz;
 
   while (remaining > 0) {
-    int pollResult = poll(fds, sz, -1);
+    int pollResult = poll(fds, sz, timeout);
 
     if (pollResult == -1) {
       switch (errno) {
@@ -101,7 +106,11 @@ NSArray *ReadOutputsAndFeedOuputLinesToBlockOnQueue(int *fildes, int sz, void (^
           abort();
       }
     } else if (pollResult == 0) {
-      NSCAssert(false, @"impossible, polling without timeout");
+      if (timeout == -1) {
+        NSCAssert(false, @"impossible, polling without timeout");
+      } else {
+        break;
+      }
     } else {
       for (int i = 0; i < sz; i++) {
         if (!(fds[i].revents & (POLLIN | POLLHUP))) {
