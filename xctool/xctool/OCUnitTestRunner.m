@@ -161,7 +161,7 @@
 }
 
 
-- (void)runTestsAndFeedOutputTo:(void (^)(NSString *))outputLineBlock
+- (void)runTestsAndFeedOutputTo:(FdOutputLineFeedBlock)outputLineBlock
                    startupError:(NSString **)startupError
                     otherErrors:(NSString **)otherErrors
 {
@@ -182,7 +182,7 @@
       testRunState = [[TestRunState alloc] initWithTestSuiteEventState:testSuiteState];
     }
 
-    void (^feedOutputToBlock)(NSString *) = ^(NSString *line) {
+    FdOutputLineFeedBlock feedOutputToBlock = ^(int fd, NSString *line) {
       [testRunState parseAndHandleEvent:line];
     };
 
