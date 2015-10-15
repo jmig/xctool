@@ -25,6 +25,8 @@
 #import "XcodeBuildSettings.h"
 #import "XcodeSubjectInfo.h"
 
+static NSString * const XCToolTempWorkspaceName = @"Tests";
+
 @implementation BuildTestsAction
 
 + (NSString *)name
@@ -73,17 +75,6 @@
    [NSString stringWithFormat:@"%@=%@", Xcode_OBJROOT, objRoot],
    [NSString stringWithFormat:@"%@=%@", Xcode_SYMROOT, symRoot],
    [NSString stringWithFormat:@"%@=%@", Xcode_SHARED_PRECOMPS_DIR, sharedPrecompsDir],
-   // Override the DerivedData location to be within our temporary directory so
-   // we don't accumulate junk in the user's real DerivedData folder.
-   //
-   // We're generating a new workspace and scheme every time we build
-   // or run tests, and so xcodebuild wants to create a directory like
-   // 'Tests-dgtnwkoyuhjfcibwyjiprineykfj' in DerivedData for every run.  Since
-   // we're overriding OBJROOT/SYMROOM/SHARED_PRECOMPS_DIR, no build output ends
-   // up here so the directory serves no purpose.  It's empty except for one
-   // 'info.plist' file.
-   [@"-IDECustomDerivedDataLocation=" stringByAppendingString:
-    [TemporaryDirectoryForAction() stringByAppendingPathComponent:@"DerivedData"]],
    xcodeCommand,
    ]];
 
@@ -123,7 +114,8 @@
 
   NSArray *xcodebuildArguments = [options commonXcodeBuildArgumentsForSchemeAction:@"TestAction"
                                                                   xcodeSubjectInfo:xcodeSubjectInfo];
-  BOOL succeeded = [BuildTestsAction buildWorkspace:[schemeGenerator writeWorkspaceNamed:@"Tests"]
+  NSString *tempWorkspacePath = [schemeGenerator writeWorkspaceNamed:XCToolTempWorkspaceName];
+  BOOL succeeded = [BuildTestsAction buildWorkspace:tempWorkspacePath
                                              scheme:@"Tests"
                                           reporters:options.reporters
                                             objRoot:xcodeSubjectInfo.objRoot
@@ -134,10 +126,65 @@
 
   [xcodeSubjectInfo.actionScripts postBuildWithOptions:options];
 
+  CleanupDerivedDataFolderForTempWorkspace(tempWorkspacePath);
+
   if (!succeeded) {
     return NO;
   }
   return YES;
+}
+
+
+// We're generating a new workspace and scheme every time we build
+// or run tests, and so xcodebuild wants to create a directory like
+// 'Tests-dgtnwkoyuhjfcibwyjiprineykfj' in DerivedData for every run.  Since
+// we're overriding OBJROOT/SYMROOM/SHARED_PRECOMPS_DIR, no build output ends
+// up here so the directory serves no purpose.  It's empty except for one
+// 'info.plist' file.
+BOOL CleanupDerivedDataFolderForTempWorkspace(NSString *path)
+{
+  NSString *libraryDirectory = [NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES) firstObject];
+  if (!libraryDirectory) {
+    return NO;
+  }
+
+  static NSString *defaultDerivedDataLocation = @"Developer/Xcode/DerivedData";
+  NSString *derivedDataPath = [libraryDirectory stringByAppendingPathComponent:defaultDerivedDataLocation];
+
+
+  NSError *error = nil;
+  NSArray *existingDerivedDataFolders = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:derivedDataPath error:&error];
+  if (error) {
+    //File can't be read, folder non existing etc...
+    return NO;
+  }
+
+  for (NSString *folder in existingDerivedDataFolders) {
+    if ([folder hasPrefix:[NSString stringWithFormat:@"%@-", XCToolTempWorkspaceName]]) {
+      //This is potentially one of our TempDerivedDataFolder
+      NSString *currentFolderPath = [derivedDataPath stringByAppendingPathComponent:folder];
+      if (IsDerivedDataFolderForWorkspaceAtPath(currentFolderPath, path)) {
+        [[NSFileManager defaultManager] removeItemAtPath:currentFolderPath error:&error];
+        return error ? NO : YES;
+      }
+    }
+  }
+
+  //We scanned all DerivedData folders without a matching one.
+  return NO;
+}
+
+BOOL IsDerivedDataFolderForWorkspaceAtPath(NSString *folderPath, NSString *workspacePath)
+{
+  NSString *infoPlistPath = [folderPath stringByAppendingPathComponent:@"info.plist"];
+  if ([[NSFileManager defaultManager] fileExistsAtPath:infoPlistPath]) {
+    NSDictionary *plistDict = [NSDictionary dictionaryWithContentsOfFile:infoPlistPath];
+    if ([plistDict[@"WorkspacePath"] isEqualToString:workspacePath]) {
+      return YES;
+    }
+  }
+
+  return NO;
 }
 
 - (instancetype)init

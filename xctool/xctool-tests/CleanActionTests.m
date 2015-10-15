@@ -85,7 +85,6 @@
                        @"OBJROOT=/Users/nekto/Library/Developer/Xcode/DerivedData/TestProject-Library-frruszglismbfoceinskphldzhci/Build/Intermediates",
                        @"SYMROOT=/Users/nekto/Library/Developer/Xcode/DerivedData/TestProject-Library-frruszglismbfoceinskphldzhci/Build/Products",
                        @"SHARED_PRECOMPS_DIR=/Users/nekto/Library/Developer/Xcode/DerivedData/TestProject-Library-frruszglismbfoceinskphldzhci/Build/Intermediates/PrecompiledHeaders",
-                       [NSString stringWithFormat:@"-IDECustomDerivedDataLocation=%@xctool_temp_UNDERTEST_%d/DerivedData", NSTemporaryDirectory(), [[NSProcessInfo processInfo] processIdentifier]],
                        @"clean",
                        ]));
   }];
@@ -133,7 +132,6 @@
                        @"OBJROOT=/Users/nekto/Library/Developer/Xcode/DerivedData/TestProject-Library-frruszglismbfoceinskphldzhci/Build/Intermediates",
                        @"SYMROOT=/Users/nekto/Library/Developer/Xcode/DerivedData/TestProject-Library-frruszglismbfoceinskphldzhci/Build/Products",
                        @"SHARED_PRECOMPS_DIR=/Users/nekto/Library/Developer/Xcode/DerivedData/TestProject-Library-frruszglismbfoceinskphldzhci/Build/Intermediates/PrecompiledHeaders",
-                       [NSString stringWithFormat:@"-IDECustomDerivedDataLocation=%@xctool_temp_UNDERTEST_%d/DerivedData", NSTemporaryDirectory(), [[NSProcessInfo processInfo] processIdentifier]],
                        @"clean"
                        ]));
   }];
